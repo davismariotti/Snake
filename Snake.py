@@ -1,4 +1,4 @@
-import pygame, random
+import pygame,random,threading
 pygame.init()
 global dir_x,dir_y
 width = 640
@@ -38,6 +38,7 @@ def do(x,y,dir_x,dir_y):
     points = []
     length = 50
     count = 0
+    tempcount = 0
     foodEaten = 0
     foodJustEaten = False
     rateOfRemoval = 15
@@ -58,7 +59,7 @@ def do(x,y,dir_x,dir_y):
         else:
             if len(points) >= length and not lengthReached:
                 lengthReached = True
-            if lengthReached and len(points) <= 5:
+            if lengthReached and len(points) <= 2:
                 death = True
                 highscore = count - 720
             tempscore = 0 if count < 720 else count-720
@@ -69,16 +70,19 @@ def do(x,y,dir_x,dir_y):
             screen.blit(foodLabel, (50, 10))
             if food.isEaten():
                 food = Food(screen)
+                tempcount = length
                 length+=80
                 foodEaten+=1
                 foodJustEaten = True
-            food.draw()
-            count+=1
-            if foodEaten > 5 and foodJustEaten:
+            if tempcount <= length:
+                tempcount += 1
+            elif foodEaten > 5 and foodJustEaten:
                 if foodEaten % 2 == 0:
-                    if rateOfRemoval > 5:
+                    if rateOfRemoval > 8:
                         rateOfRemoval-=1
                         foodJustEaten = False
+            food.draw()
+            count+=1
             if count % rateOfRemoval == 0 and lengthReached:
                 del points[0]
                 length-=2
@@ -182,4 +186,9 @@ def do(x,y,dir_x,dir_y):
                 return 
         pygame.display.flip()
         clock.tick(150)
-do(x,y,dir_x,dir_y)
+try:
+    t = threading.Thread(target=do(x,y,dir_x,dir_y))
+    t.start()
+    t.join()
+except:
+    print "bad"
