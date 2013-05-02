@@ -4,9 +4,9 @@ Created on Jan 7, 2013
 @author: gomeow
 '''
 from PodSixNet.Connection import connection, ConnectionListener
-import threading, time, pygame, random
+import threading, time, pygame, random, urllib2, sys
 
-global t1, t2, ready, pos, c, dir_x2, dir_y2, x2, y2, which, new, food1, food2
+global t1, t2, ready, pos, c, dir_x2, dir_y2, x2, y2, which, new, food1, food2, death2
 ready = False
 pos = 0
 food1 = 0
@@ -14,6 +14,7 @@ food2_ = 0
 which = 0
 new = 0
 c = 0
+death2 = False
 class Client(ConnectionListener):
     global players, ready, pos
     players = []
@@ -62,7 +63,10 @@ class Client(ConnectionListener):
     def Network_error(self, data):
         print 'error:', data['error'][1]
         connection.Close()
-
+    def Network_death(self, data):
+        global death2
+        print data
+        death2 = True
     def Network_disconnected(self, data):
         print 'Server disconnected'
         exit()
@@ -76,6 +80,7 @@ def startClient():
         except:
             pass
 def connect():
+    setupMusics()
     global c, t1, t2
     c = Client("localhost", 12345)
     t1 = threading.Thread(target=startClient)
@@ -85,10 +90,16 @@ def connect():
     t2.start()
     t2.join()
     
-
+def setupMusics():
+    f = open("tetris.mid", "wb")
+    f.write(urllib2.urlopen("http://gomeow.info/files/tetrisb.mid").read())
+    f.close()
+    pygame.mixer.init()
+    pygame.mixer.music.load("tetris.mid")
+    pygame.mixer.music.play(-1)
 def start():
     pygame.init()
-    global dir_x, dir_y, dir_x2, dir_y2, ready, pos, x, y, x2, y2, c, which, new, food1, food2
+    global death2, dir_x, dir_y, dir_x2, dir_y2, ready, pos, x, y, x2, y2, c, which, new, food1, food2
     width = 640
     height = 400
     x = 0
@@ -129,7 +140,7 @@ def start():
     def getRand():
         return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     def do():
-        global ready, pos, dir_x, dir_y, dir_x2, dir_y2, x, y, x2, y2, c, which, new, food1, food2
+        global death2, ready, pos, dir_x, dir_y, dir_x2, dir_y2, x, y, x2, y2, c, which, new, food1, food2
         points = []
         points2 = []
         length = 50
@@ -166,15 +177,24 @@ def start():
                     x2 = 280
                 gotPos = True
             events = pygame.event.get()
-            if not ready:
+            if death:
+                screen.fill(BLACK)
+                deathLabel = bigFont.render("You lose!", 1, (255, 255, 255))
+                screen.blit(deathLabel, (width / 2 - 40, height / 2 - 40))
+            elif death2:
+                screen.fill(BLACK)
+                deathLabel = bigFont.render("You win!", 1, (255, 255, 255))
+                screen.blit(deathLabel, (width / 2 - 40, height / 2 - 40))
+            elif not ready:
                 screen.fill(BLACK)
                 deathLabel = bigFont.render("Waiting", 1, (255, 255, 255))
                 screen.blit(deathLabel, (width / 2 - 40, height / 2 - 40))
             else:
                 if len(points) >= length and not lengthReached:
                     lengthReached = True
-                if lengthReached and len(points) <= 5:
+                if lengthReached and len(points) <= 5 and not death:
                     death = True
+                    c.Send({"action":"death"})
                 if len(points) >= length2 and not lengthReached2:
                     lengthReached2 = True
                 if lengthReached2 and len(points2) <= 5:
@@ -190,7 +210,8 @@ def start():
                     if which == 1:
                         food = Food(screen, new[0], new[1], new[2])
                         food.draw()
-                        
+                        print food.x,
+                        print food.y
                         tempcount2 = length2
                         length2 += 80
                         foodEaten2 += 1
@@ -198,7 +219,8 @@ def start():
                     else:
                         food2 = Food(screen, new[0], new[1], new[2])
                         food2.draw()
-                        
+                        print food2.x,
+                        print food2.y
                         tempcount2 = length2
                         length2 += 80
                         foodEaten2 += 1
@@ -213,10 +235,10 @@ def start():
                     foodJustEaten = True
                     food1_eaten = False
                 if food2_eaten:
-                    tempcount2 = length2
-                    length2 += 80
-                    foodEaten2 += 1
-                    foodJustEaten2 = True
+                    tempcount = length
+                    length += 80
+                    foodEaten += 1
+                    foodJustEaten = True
                     food2_eaten = False
                 if tempcount <= length:
                     tempcount += 1
@@ -323,18 +345,22 @@ def start():
                     c.Send({"action":"loc","loc":(x, y), "dir":(dir_x, dir_y)})
                 if food.didHit((x, y)):
                     food1_eaten = True
-                    food = Food(screen, random.randint(50, screen.get_width()-50), random.randint(50, screen.get_width()-50), random.randint(10,21))
+                    food = Food(screen, random.randint(50, screen.get_width()-50), random.randint(50, screen.get_height()-50), random.randint(10,21))
+                    food.draw()
+                    print "-",
+                    print food.x,
+                    print food.y
                     c.Send({'action':'food', 'which':1, 'new':(food.x, food.y, food.foodheight)})
                 if food2.didHit((x, y)):
                     food2_eaten = True
-                    food2 = Food(screen, random.randint(50, screen.get_width()-50), random.randint(50, screen.get_width()-50), random.randint(10,21))
+                    food2 = Food(screen, random.randint(50, screen.get_width()-50), random.randint(50, screen.get_height()-50), random.randint(10,21))
                     food2.draw()
+                    print "-",
+                    print food2.x,
+                    print food2.y
                     c.Send({'action':'food', 'which':2, 'new':(food2.x, food2.y, food2.foodheight)})
             for event in events:
                 if event.type == pygame.QUIT:
-                    return
-                if event.type == pygame.MOUSEBUTTONDOWN and death:
-                    do(x, y, dir_x, dir_y)
                     return
             pygame.display.flip()
             clock.tick(150)

@@ -32,6 +32,11 @@ class ClientChannel(Channel):
         for p in self._server.players:
             if p != self:
                 self._server.SendToPlayer(p, {"action":"food", "which":data['which'], "new":data['new']})    
+    def Network_death(self, data):
+        print data
+        for p in self._server.players:
+            if p != self:
+                self._server.SendToPlayer(p, {"action":"death"})
     def Network_nickname(self, data):
         self.nickname = data['nickname']
         self._server.SendPlayers()
@@ -54,7 +59,7 @@ class ChatServer(Server):
             x = 1
             for p in self.players:
                 p.Send({"action":"ready", "pos":x, 'food1':(50,234, 15),'food2':(200,320, 11)})
-                x = x + 1
+                x += 1
         sleep(1)
     
     def DelPlayer(self, player):

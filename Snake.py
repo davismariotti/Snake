@@ -1,8 +1,20 @@
-import pygame,random,threading
+#March 22 10:21 AM = I am experimenting with pygame and have not decided which game I will be doing.
+#I might do a game similiar to snake, because snake is cool.
+
+#March 28 11:25 AM = I decided to stay with snake and am working on adding code and changing it substantially
+
+#April 12 10:23 AM = Made food stop the removal of points
+
+#April 19 10:19 AM = Working on multiplayer, singleplayer finished for the most part
+
+#April 26 10:20 AM = Multiplayer movement now works, working on Food eating tracking
+
+import pygame,random,threading,urllib2
 pygame.init()
 global dir_x,dir_y
 width = 640
 height = 400
+# Starting locations
 x = width/2
 y = height/2
 dir_x = 0
@@ -11,6 +23,7 @@ screen = pygame.display.set_mode((640,400))
 BLACK = (0,0,0)
 clock = pygame.time.Clock()
 
+# A class for food. Initialized everytime a food is eaten
 class Food:
     def __init__(self, s):
         self.foodheight = random.randint(10,21)
@@ -25,6 +38,7 @@ class Food:
     def isEaten(self):
         return self.eaten
     def didHit(self, point):
+        # Checks whether the point is within the food's rect
         if point[0] < self.x or point[0] > self.x + self.foodheight:
             return False
         elif point[1] < self.y or point[1] > self.y + self.foodheight:
@@ -32,31 +46,44 @@ class Food:
         else:
             return True
 def getRand():
+    # Used for return a color for the snake
     return (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 def do(x,y,dir_x,dir_y):
-    food = Food(screen)
-    points = []
+    # ----
+    # Download the song file from the internet
+    f = open("tetris.mid", "wb")
+    f.write(urllib2.urlopen("http://gomeow.info/files/tetrisb.mid").read())
+    f.close()
+    pygame.mixer.init()
+    pygame.mixer.music.load("tetris.mid")
+    pygame.mixer.music.play(-1)
+    # ----
+    food = Food(screen) # Initialize the first food
+    points = [] # A variable for all the points in the snake
+    # A variable for the length of the snake. When this changes, the code will adjust the snake's actual length
     length = 50
-    count = 0
+    count = 0 # A variable for the count, incremented every loop. Used for score and length changing.
     tempcount = 0
     foodEaten = 0
     foodJustEaten = False
-    rateOfRemoval = 15
+    rateOfRemoval = 15 # A variable for how many loops between each point removal of the back of the snake
     lengthReached = False
     death = False
     highscore = 0
-    events = []
+    events = [] # Holds the events of each round, as they are processed in 2 places.
     myfont = pygame.font.SysFont("monospace", 15)
     bigFont = pygame.font.SysFont("monospace",36)
     while 1:
         events = pygame.event.get()
         if death:
+            # If you are dead, show the death screen
             screen.fill(BLACK)
             deathLabel = bigFont.render("DEATH", 1, (255,255,255))
             highscoreLabel = myfont.render("HighScore: " + str(highscore), 1, (255,255,255))
             screen.blit(deathLabel, (width/2-40,height/2-40))
             screen.blit(highscoreLabel, (width/2-40,height/2+20))
         else:
+            # The code will wait until the full length is reached before starting to remove points.
             if len(points) >= length and not lengthReached:
                 lengthReached = True
             if lengthReached and len(points) <= 2:
@@ -68,6 +95,7 @@ def do(x,y,dir_x,dir_y):
             screen.fill(BLACK)
             screen.blit(label, (250, 10))
             screen.blit(foodLabel, (50, 10))
+            # Make a new food if it was eaten.
             if food.isEaten():
                 food = Food(screen)
                 tempcount = length
@@ -105,35 +133,6 @@ def do(x,y,dir_x,dir_y):
             for point in points:
                 screen.set_at(point, color)
             screen.set_at((x,y),color)
-            #AI below
-            """def changeDir(dir_x,dir_y):
-                rand = random.randint(0,4)
-                if rand == 0:
-                    if dir_y != 1:
-                        return [0,-1]
-                    else:
-                        changeDir(dir_x,dir_y)
-                elif rand == 1:
-                    if dir_y != -1:
-                        return [0,1]
-                    else:
-                        changeDir(dir_x,dir_y)
-                elif rand == 2:
-                    if dir_x != 1:
-                        return [-1,0]
-                    else:
-                        changeDir(dir_x,dir_y)
-                elif rand == 3:
-                    if dir_x != -1:
-                        return [1,0]
-                    else:
-                        changeDir(dir_x,dir_y)
-                else:
-                    return [1,1]
-            if count%100==0:
-                var = changeDir(dir_x,dir_y)
-                dir_x = var[0]
-                dir_y = var[1]"""
             for event in events:
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_w:
@@ -181,14 +180,9 @@ def do(x,y,dir_x,dir_y):
         for event in events:
             if event.type == pygame.QUIT:
                 return
-            if event.type == pygame.MOUSEBUTTONDOWN and death:
+            if event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.KEYDOWN and death:
                 do(x,y,dir_x,dir_y)
                 return 
         pygame.display.flip()
         clock.tick(150)
-try:
-    t = threading.Thread(target=do(x,y,dir_x,dir_y))
-    t.start()
-    t.join()
-except:
-    print "bad"
+do(x,y,dir_x,dir_y)
