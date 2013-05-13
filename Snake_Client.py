@@ -5,7 +5,7 @@ Created on Jan 7, 2013
 '''
 from PodSixNet.Connection import connection, ConnectionListener
 import threading, time, pygame, random, urllib2, sys
-
+# Just a few global vars...
 global t1, t2, ready, pos, c, dir_x2, dir_y2, x2, y2, which, new, food1, food2, death2
 ready = False
 pos = 0
@@ -13,7 +13,7 @@ food1 = 0
 food2_ = 0
 which = 0
 new = 0
-c = 0
+c = 0 # The client
 death2 = False
 class Client(ConnectionListener):
     global players, ready, pos
@@ -91,11 +91,16 @@ def connect():
     t2.join()
     
 def setupMusics():
+    # Download the music from the internet
     f = open("tetris.mid", "wb")
+    # The url is from my webserver
     f.write(urllib2.urlopen("http://gomeow.info/files/tetrisb.mid").read())
+    # Save the file
     f.close()
+    # Play the song
     pygame.mixer.init()
     pygame.mixer.music.load("tetris.mid")
+    # Loop the song with a parameter of -1
     pygame.mixer.music.play(-1)
 def start():
     pygame.init()
@@ -141,7 +146,9 @@ def start():
         return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
     def do():
         global death2, ready, pos, dir_x, dir_y, dir_x2, dir_y2, x, y, x2, y2, c, which, new, food1, food2
+        # Points of our snake
         points = []
+        # Points of the opponents snake
         points2 = []
         length = 50
         length2 = 50
@@ -177,29 +184,40 @@ def start():
                     x2 = 280
                 gotPos = True
             events = pygame.event.get()
+            
             if death:
                 screen.fill(BLACK)
                 deathLabel = bigFont.render("You lose!", 1, (255, 255, 255))
                 screen.blit(deathLabel, (width / 2 - 40, height / 2 - 40))
+                credits_ = bigFont.render("Made by: gomeow", 1, (255, 255, 255))
+                screen.blit(credits_, (width / 2 - 40), height /2 - 80)
+                
             elif death2:
                 screen.fill(BLACK)
                 deathLabel = bigFont.render("You win!", 1, (255, 255, 255))
                 screen.blit(deathLabel, (width / 2 - 40, height / 2 - 40))
+                credits_ = bigFont.render("Made by: gomeow", 1, (255, 255, 255))
+                screen.blit(credits_, (width / 2 - 40), height /2 - 80)
+                
             elif not ready:
                 screen.fill(BLACK)
                 deathLabel = bigFont.render("Waiting", 1, (255, 255, 255))
                 screen.blit(deathLabel, (width / 2 - 40, height / 2 - 40))
+                
             else:
                 if len(points) >= length and not lengthReached:
                     lengthReached = True
+                    
                 if lengthReached and len(points) <= 5 and not death:
                     death = True
                     c.Send({"action":"death"})
+                    
                 if len(points) >= length2 and not lengthReached2:
                     lengthReached2 = True
+                    
                 if lengthReached2 and len(points2) <= 5:
                     death2 = True
-                #    highscore = count - 720
+
                 tempscore = 0 if count < 720 else count - 720
                 label = myfont.render("(" + str(x) + ", " + str(y) + ")" + "        Score: " + str(tempscore), 1, (255, 255, 255))
                 foodLabel = myfont.render(str(len(points)) + ", " + str(count) + " " + str(foodEaten) + ", " + str(len(points)) + ", " + str(rateOfRemoval), 1, (255, 255, 255))
@@ -225,6 +243,7 @@ def start():
                         length2 += 80
                         foodEaten2 += 1
                         foodJustEaten2 = True
+                        
                     which = 0
                     new = 0
                 
@@ -234,12 +253,14 @@ def start():
                     foodEaten += 1
                     foodJustEaten = True
                     food1_eaten = False
+                    
                 if food2_eaten:
                     tempcount = length
                     length += 80
                     foodEaten += 1
                     foodJustEaten = True
                     food2_eaten = False
+                    
                 if tempcount <= length:
                     tempcount += 1
                 elif foodEaten > 5 and foodJustEaten:
@@ -247,6 +268,7 @@ def start():
                         if rateOfRemoval > 6:
                             rateOfRemoval -= 1
                             foodJustEaten = False
+                            
                 if tempcount2 <= length2:
                     tempcount2 += 1
                 elif foodEaten2 > 5 and foodJustEaten2:
@@ -257,25 +279,31 @@ def start():
                 food.draw()
                 food2.draw()
                 count += 1
+                
                 if count % rateOfRemoval == 0 and lengthReached and len(points) > 0:
                     del points[0]
                     length -= 2
+                    
                 if count % rateOfRemoval2 == 0 and lengthReached2 and len(points2) > 0:
                     del points2[0]
                     length2 -= 2
+                    
                 x += dir_x
                 y += dir_y
                 x2 += dir_x2
                 y2 += dir_y2
+                
                 points.append((x, y))
                 points2.append((x2, y2))
+                
                 if len(points) > length:
                     for i in range(0, 1):
                         del points[i]
+                        
                 if len(points2) > length2:
                     for i in range(0, 1):
                         del points2[i]
-                    # del points[0]
+
                 if x <= 0:
                     x = width
                 elif x >= width:
@@ -284,6 +312,7 @@ def start():
                     y = height
                 elif y >= height:
                     y = 0
+                    
                 if x2 <= 0:
                     x2 = width
                 elif x2 >= width:
@@ -292,14 +321,19 @@ def start():
                     y2 = height
                 elif y2 >= height:
                     y2 = 0
+                    
                 color = getRand()
                 color2 = getRand()
+                
                 for point in points:
                     screen.set_at(point, color)
+                    
                 for point2 in points2:
                     screen.set_at(point2, color)
+                    
                 screen.set_at((x, y), color)
                 screen.set_at((x2, y2), color2)
+                
                 for event in events:
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_w:
@@ -343,6 +377,7 @@ def start():
                             dir_x = 1
                             dir_y = 1
                     c.Send({"action":"loc","loc":(x, y), "dir":(dir_x, dir_y)})
+                    
                 if food.didHit((x, y)):
                     food1_eaten = True
                     food = Food(screen, random.randint(50, screen.get_width()-50), random.randint(50, screen.get_height()-50), random.randint(10,21))
@@ -350,7 +385,10 @@ def start():
                     print "-",
                     print food.x,
                     print food.y
+                    # Send to the other player that we ate a food
+                    # Also send the new locations
                     c.Send({'action':'food', 'which':1, 'new':(food.x, food.y, food.foodheight)})
+                    
                 if food2.didHit((x, y)):
                     food2_eaten = True
                     food2 = Food(screen, random.randint(50, screen.get_width()-50), random.randint(50, screen.get_height()-50), random.randint(10,21))
@@ -360,8 +398,10 @@ def start():
                     print food2.y
                     c.Send({'action':'food', 'which':2, 'new':(food2.x, food2.y, food2.foodheight)})
             for event in events:
+                # This is separate because this will still work if the death screen/waiting screen is shown
                 if event.type == pygame.QUIT:
                     return
+                
             pygame.display.flip()
             clock.tick(150)
     do()

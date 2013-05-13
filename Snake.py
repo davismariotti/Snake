@@ -1,15 +1,4 @@
-#March 22 10:21 AM = I am experimenting with pygame and have not decided which game I will be doing.
-#I might do a game similiar to snake, because snake is cool.
-
-#March 28 11:25 AM = I decided to stay with snake and am working on adding code and changing it substantially
-
-#April 12 10:23 AM = Made food stop the removal of points
-
-#April 19 10:19 AM = Working on multiplayer, singleplayer finished for the most part
-
-#April 26 10:20 AM = Multiplayer movement now works, working on Food eating tracking
-
-import pygame,random,threading,urllib2
+import pygame,random,urllib2
 pygame.init()
 global dir_x,dir_y
 width = 640
@@ -104,6 +93,7 @@ def do(x,y,dir_x,dir_y):
                 foodJustEaten = True
             if tempcount <= length:
                 tempcount += 1
+            # If they ate 5 food and they just ate a food
             elif foodEaten > 5 and foodJustEaten:
                 if foodEaten % 2 == 0:
                     if rateOfRemoval > 8:
@@ -111,16 +101,20 @@ def do(x,y,dir_x,dir_y):
                         foodJustEaten = False
             food.draw()
             count+=1
+            # Only start removing points after they reach the initial length
             if count % rateOfRemoval == 0 and lengthReached:
                 del points[0]
                 length-=2
+            # Set the e and y to the next point in the direction
             x += dir_x
             y += dir_y
+            # Add the points to the list to be drawn later
             points.append((x,y))
             if len(points) > length:
                 for i in range(0,1):
                     del points[i]
                 #del points[0]
+            # The code below allows the snake to wrap around the screen
             if x <= 0:
                 x = width
             elif x >= width:
@@ -129,11 +123,12 @@ def do(x,y,dir_x,dir_y):
                 y  = height
             elif y >= height:
                 y = 0
+            # Make the snake a random color
             color = getRand()
             for point in points:
                 screen.set_at(point, color)
-            screen.set_at((x,y),color)
             for event in events:
+                # Change directions
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_w:
                         if dir_y == 1:
@@ -175,6 +170,7 @@ def do(x,y,dir_x,dir_y):
                             break
                         dir_x = 1
                         dir_y = 1
+            # Set the food as eaten if the snake's head is within the food rect
             if food.didHit((x,y)):
                 food.setEaten(True)
         for event in events:
@@ -185,4 +181,5 @@ def do(x,y,dir_x,dir_y):
                 return 
         pygame.display.flip()
         clock.tick(150)
+# Start
 do(x,y,dir_x,dir_y)
