@@ -132,42 +132,42 @@ def do(x,y,dir_x,dir_y):
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_w:
                         if dir_y == 1:
-                            break
+                            continue
                         dir_x = 0
                         dir_y = -1
                     elif event.key == pygame.K_s:
                         if dir_y == -1:
-                            break
+                            continue
                         dir_x = 0
                         dir_y = 1
                     elif event.key == pygame.K_a:
                         if dir_x == 1:
-                            break
+                            continue
                         dir_x = -1
                         dir_y = 0
                     elif event.key == pygame.K_d:
                         if dir_x == -1:
-                            break
+                            continue
                         dir_x = 1
                         dir_y = 0
                     elif event.key == pygame.K_q:
                         if dir_x == 1 and dir_y == 1:
-                            break
+                            continue
                         dir_x = -1
                         dir_y = -1
                     elif event.key == pygame.K_e:
                         if dir_x == -1 and dir_y == 1:
-                            break
+                            continue
                         dir_x = 1
                         dir_y = -1
                     elif event.key == pygame.K_z:
                         if dir_x == 1 and dir_y == -1:
-                            break
+                            continue
                         dir_x = -1
                         dir_y = 1
                     elif event.key == pygame.K_c:
                         if dir_x == -1 and dir_y == -1:
-                            break
+                            continue
                         dir_x = 1
                         dir_y = 1
             # Set the food as eaten if the snake's head is within the food rect
